@@ -148,14 +148,114 @@ public class Main {
                 Files.writeString(pathFileOutput, String.valueOf(encryptLine), StandardOpenOption.APPEND);
             }
             catch (Exception ex){
+                System.out.println(ex);
+            }
+        }
+    }
+    public static void DecryptModule(){
+        System.out.println("Модуль дешифрования данных.");
 
+        Path pathFileInput;
+        Path pathFileOutput;
+        int keyEncrypt;
+
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("Введите путь зашифрованного файла или " + EXIT + " для выхода:");
+            String strFileInput = scanner.nextLine();
+
+            if (ExitFunction(strFileInput)) return;
+
+            try{
+                pathFileInput = Path.of(strFileInput);
+                if (Files.exists(pathFileInput)){
+                    break;
+                }
+                System.out.println("Файл не существует! Повторите ввод.");
+            }
+            catch (InvalidPathException ex){
+                System.err.println("Путь недействителен:" + strFileInput);
+                System.err.println("Ошибка:" + ex.getMessage());
+                System.out.println("Повторите ввод.");
             }
         }
 
+        while (true) {
+            System.out.println("Введите путь для дешифрованного файла или " + EXIT + " для выхода:");
+            String strFileOutput = scanner.nextLine();
 
+            if (ExitFunction(strFileOutput)) return;
 
-    }
-    public static void DecryptModule(){
+            try{
+                pathFileOutput = Path.of(strFileOutput);
+                if (Files.exists(pathFileOutput)){
+                    break;
+                }
+                System.out.println("Файл не существует! Повторите ввод.");
+            }
+            catch (InvalidPathException ex){
+                System.err.println("Путь недействителен:" + strFileOutput);
+                System.err.println("Ошибка:" + ex.getMessage());
+                System.out.println("Повторите ввод.");
+            }
+        }
+
+        while (true) {
+            System.out.println("Введите ключ (число от 0 до "+ ALPHABET.length + " :");
+            try {
+                keyEncrypt = scanner.nextInt();
+                if (keyEncrypt < 0 || keyEncrypt > ALPHABET.length){
+                    throw new InputMismatchException();
+                }
+                break;
+            } catch (InputMismatchException ex) {
+                System.out.println("Ошибка ввода! Не верно задан ключ шифрования!");
+                System.out.println("Повторите ввод.");
+            }
+        }
+
+        List<String> list = new ArrayList<String>();
+        try {
+            list = Files.readAllLines(pathFileInput);
+        }
+        catch(Exception ex){
+
+        }
+        char encryptSymbol;
+        for(String line : list){
+            char[] encryptLine = new char[line.length() + 1];
+            int numberSymbol = 0;
+
+            for (char symbol : line.toCharArray()){
+                if (!SYMBOL_TO_NUMBER.containsKey(symbol)){
+                    encryptSymbol = symbol;
+                }
+                else {
+                    int newNumberSymbol = SYMBOL_TO_NUMBER.get(symbol) - keyEncrypt;
+                    if (newNumberSymbol > ALPHABET.length - 1) {
+                        newNumberSymbol -= ALPHABET.length;
+                    }
+                    if (newNumberSymbol < 0) {
+                        newNumberSymbol += ALPHABET.length;
+                    }
+                    encryptSymbol = NUMBER_TO_SYMBOL.get(newNumberSymbol);
+                }
+
+                encryptLine[numberSymbol] = encryptSymbol;
+                numberSymbol++;
+                System.out.println("decrypt -> encrypt = " + symbol + " -> " + encryptSymbol);
+
+            }
+            encryptLine[numberSymbol] = '\n';
+            System.out.println(String.valueOf(encryptLine));
+            try {
+                Files.writeString(pathFileOutput, String.valueOf(encryptLine), StandardOpenOption.APPEND);
+            }
+            catch (Exception ex){
+                System.out.println(ex);
+            }
+        }
 
     }
     public static void BruteForceModule(){
