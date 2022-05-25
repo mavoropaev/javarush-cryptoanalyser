@@ -37,10 +37,10 @@ public class Main {
 
             switch (numberMenu) {
                 case ENCRYPT_MODULE:
-                    encryptModule();
+                    encryptModule(true);
                     break;
                 case DECRYPT_MODULE:
-                    decryptModule();
+                    encryptModule(false);
                     break;
                 case BRUTEFORCE_MODULE:
                     bruteForceModule();
@@ -79,28 +79,46 @@ public class Main {
         }
     }
 
-    public static void encryptModule() {
-        System.out.println("Модуль шифрования данных.");
+    public static void encryptModule(boolean flagEncrypt) {
+        if (flagEncrypt) {
+            System.out.println("Модуль шифрования данных.");
+        }
+        else{
+            System.out.println("Модуль дешифрования данных.");
+        }
 
         Path pathFileInput;
         Path pathFileOutput;
         Scanner scanner = new Scanner(System.in);
 
         try {
-            String message = "Введите путь и имя файла для шифрования.";
+            String message;
+            if (flagEncrypt) {
+                message = "Введите путь и имя файла для шифрования.";
+            }
+            else{
+                message = "Введите имя и путь зашифрованного файла.";
+            }
             pathFileInput = getNameInputFile(scanner, message);
         } catch (ExitFunctionException ex) {
             return;
         }
 
         try {
-            String message = "Введите путь и имя для зашифрованного файла.";
+            String message;
+            if (flagEncrypt) {
+                message = "Введите путь и имя для зашифрованного файла.";
+            }
+            else{
+                message = "Введите имя и путь для дешифрованного файла.";
+            }
             pathFileOutput = getNameOutputFile(scanner, message);
         } catch (ExitFunctionException ex) {
             return;
         }
 
         int keyEncrypt = getKeyEncrypt(scanner);
+        if (!flagEncrypt) keyEncrypt *= -1;
 
         try {
             for (String line : Files.readAllLines(pathFileInput)) {
@@ -121,65 +139,7 @@ public class Main {
         }
     }
 
-    public static void decryptModule(){
-        System.out.println("Модуль дешифрования данных.");
 
-        Path pathFileInput;
-        Path pathFileOutput;
-
-        Scanner scanner = new Scanner(System.in);
-        try {
-            String message = "Введите имя и путь зашифрованного файла.";
-            pathFileInput = getNameInputFile(scanner, message);
-        } catch (ExitFunctionException ex) {
-            return;
-        }
-
-        try {
-            String message = "Введите имя и путь для дешифрованного файла.";
-            pathFileOutput = getNameOutputFile(scanner, message);
-        } catch (ExitFunctionException ex) {
-            return;
-        }
-
-        int keyEncrypt = getKeyEncrypt(scanner);
-
-        try {
-            for (String line : Files.readAllLines(pathFileInput)) {
-                char[] encryptLine = new char[line.length() + 1];
-
-                int numberSymbol = 0;
-                for (char symbol : line.toCharArray()) {
-                    encryptLine[numberSymbol] = getEncryptSymbol(-keyEncrypt, symbol);
-                    numberSymbol++;
-                }
-                encryptLine[numberSymbol] = '\n';
-
-                Files.writeString(pathFileOutput, String.valueOf(encryptLine),
-                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            }
-        } catch (IOException ex){
-            System.out.println("Ошибка работы с файлом :" + ex.getMessage());
-        }
-    }
-
-    private static char getEncryptSymbol(int keyEncrypt, char symbol) {
-        char encryptSymbol;
-        if (!SYMBOL_TO_NUMBER.containsKey(symbol)){
-            encryptSymbol = symbol;
-        }
-        else {
-            int newNumberSymbol = SYMBOL_TO_NUMBER.get(symbol) + keyEncrypt;
-            if (newNumberSymbol > ALPHABET.length - 1) {
-                newNumberSymbol -= ALPHABET.length;
-            }
-            if (newNumberSymbol < 0) {
-                newNumberSymbol += ALPHABET.length;
-            }
-            encryptSymbol = NUMBER_TO_SYMBOL.get(newNumberSymbol);
-        }
-        return encryptSymbol;
-    }
 
     public static Path getNameInputFile(Scanner scanner, String message) throws ExitFunctionException {
         while (true) {
@@ -236,7 +196,7 @@ public class Main {
 
     public static int getKeyEncrypt(Scanner scanner){
         while (true) {
-            System.out.println("Введите ключ (число от 0 до "+ ALPHABET.length + " :");
+            System.out.println("Введите ключ (число от 0 до "+ (ALPHABET.length - 1) + ") :");
             try {
                 int keyEncrypt = scanner.nextInt();
                 if (keyEncrypt < 0 || keyEncrypt > ALPHABET.length){
@@ -250,10 +210,10 @@ public class Main {
         }
     }
 
-
     public static void bruteForceModule(){
 
     }
+
     public static void statisticModule(){
 
     }
@@ -267,6 +227,7 @@ public class Main {
             return  false;
         }
     }
+
     private static void initialSetMenu(){
         setMenu = new HashSet<>();
         setMenu.add(ENCRYPT_MODULE);
@@ -275,11 +236,30 @@ public class Main {
         setMenu.add(STATISTIC_MODULE);
         setMenu.add(EXIT);
     }
+
     private static void initialEncryptMap(){
         for (int i = 0; i < ALPHABET.length; i++){
             SYMBOL_TO_NUMBER.put(ALPHABET[i], i);
             NUMBER_TO_SYMBOL.put(i, ALPHABET[i]);
         }
+    }
+
+    private static char getEncryptSymbol(int keyEncrypt, char symbol) {
+        char encryptSymbol;
+        if (!SYMBOL_TO_NUMBER.containsKey(symbol)){
+            encryptSymbol = symbol;
+        }
+        else {
+            int newNumberSymbol = SYMBOL_TO_NUMBER.get(symbol) + keyEncrypt;
+            if (newNumberSymbol > ALPHABET.length - 1) {
+                newNumberSymbol -= ALPHABET.length;
+            }
+            if (newNumberSymbol < 0) {
+                newNumberSymbol += ALPHABET.length;
+            }
+            encryptSymbol = NUMBER_TO_SYMBOL.get(newNumberSymbol);
+        }
+        return encryptSymbol;
     }
 
 
