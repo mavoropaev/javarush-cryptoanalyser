@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 
 public class Encryption {
@@ -81,6 +82,62 @@ public class Encryption {
     }
 
     public static void bruteForceModule(){
+        FrequencyDictionary frequencyDictionary = new FrequencyDictionary();
+
+        System.out.println("Модуль дешифрования данных методом Brute force.");
+
+        Path pathFileInput;
+        Path pathFileOutput;
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+            String message = "Введите имя и путь зашифрованного файла.";
+            pathFileInput = getNameInputFile(scanner, message);
+        } catch (ExitFunctionException ex) {
+            return;
+        }
+
+        try {
+            String message = "Введите имя и путь для дешифрованного файла.";
+            pathFileOutput = getNameOutputFile(scanner, message);
+        } catch (ExitFunctionException ex) {
+            return;
+        }
+
+        try {
+            List<String> listAllLines = Files.readAllLines(pathFileInput);
+            StringBuilder decryptString = new StringBuilder();
+
+            for (int numSymbol = 1; numSymbol <= ALPHABET.length; numSymbol++) {
+                int keyDecrypt = -numSymbol;
+                for (String line : listAllLines) {
+                    for (char symbol : line.toCharArray()) {
+                        decryptString.append(getEncryptSymbol(keyDecrypt, symbol));
+                    }
+                    decryptString.append('\n');
+                }
+
+                String[] arrayWord = decryptString.toString().split(" ");
+                int numberOfCoincidences = 0;
+                for (int numWord = 0; numWord < arrayWord.length; numWord++){
+                    if (frequencyDictionary.dictionary.contains(arrayWord[numWord])){
+                        numberOfCoincidences += 1;
+                    }
+                }
+
+                if (numberOfCoincidences < 5) {
+                    decryptString.delete(0, decryptString.length());
+                }
+                else{
+                    Files.writeString(pathFileOutput, String.valueOf(decryptString),
+                                  StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                    break;
+                }
+
+            }
+        } catch (IOException ex){
+            System.out.println("Ошибка работы с файлом :" + ex.getMessage());
+        }
 
     }
 
