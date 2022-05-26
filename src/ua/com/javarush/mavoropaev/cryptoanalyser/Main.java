@@ -30,7 +30,7 @@ public class Main {
 
     }
 
-    private static void dialogModule() {
+    public static void dialogModule() {
         int numberMenu = EXIT - 1;
         while (numberMenu != EXIT) {
             numberMenu = choiceMenu();
@@ -49,7 +49,6 @@ public class Main {
                     statisticModule();
                     break;
             }
-
         }
     }
 
@@ -138,8 +137,6 @@ public class Main {
             System.out.println("Ошибка работы с файлом :" + ex.getMessage());
         }
     }
-
-
 
     public static Path getNameInputFile(Scanner scanner, String message) throws ExitFunctionException {
         while (true) {
