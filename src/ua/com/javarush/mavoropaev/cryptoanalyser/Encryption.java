@@ -1,5 +1,8 @@
 package ua.com.javarush.mavoropaev.cryptoanalyser;
 
+import ua.com.javarush.mavoropaev.cryptoanalyser.exception.ExitFunctionException;
+import ua.com.javarush.mavoropaev.cryptoanalyser.exception.FileProcessingException;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -63,7 +66,7 @@ public class Encryption {
         if (!flagEncrypt) keyEncrypt *= -1;
 
         try {
-            for (String line : Files.readAllLines(pathFileInput)) {
+            for (String line : getInputStrings(pathFileInput)) {
                 char[] encryptLine = new char[line.length() + 1];
 
                 int numberSymbol = 0;
@@ -73,11 +76,29 @@ public class Encryption {
                 }
                 encryptLine[numberSymbol] = '\n';
 
-                Files.writeString(pathFileOutput, String.valueOf(encryptLine),
-                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                writeStrings(pathFileOutput, String.valueOf(encryptLine));
             }
-        } catch (IOException ex){
-            System.out.println("Ошибка работы с файлом :" + ex.getMessage());
+        } catch (FileProcessingException ex){
+            System.err.println(ex.getMessage());
+        }
+    }
+
+    private static void writeStrings(Path pathFileOutput, String encryptLine) {
+        try {
+            Files.writeString(pathFileOutput, encryptLine,
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        }
+        catch(IOException ex){
+            throw new FileProcessingException("Ошибка записи в файл " + pathFileOutput, ex);
+        }
+    }
+
+    private static List<String> getInputStrings(Path pathFileInput) {
+        try {
+            return Files.readAllLines(pathFileInput);
+        }
+        catch(IOException ex){
+            throw new FileProcessingException("Ошибка чтения файла " + pathFileInput, ex);
         }
     }
 
@@ -105,7 +126,7 @@ public class Encryption {
         }
 
         try {
-            List<String> listAllLines = Files.readAllLines(pathFileInput);
+            List<String> listAllLines = getInputStrings(pathFileInput);
             StringBuilder decryptString = new StringBuilder();
 
             for (int numSymbol = 1; numSymbol <= ALPHABET.length; numSymbol++) {
@@ -129,14 +150,13 @@ public class Encryption {
                     decryptString.delete(0, decryptString.length());
                 }
                 else{
-                    Files.writeString(pathFileOutput, String.valueOf(decryptString),
-                                  StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                    writeStrings(pathFileOutput, String.valueOf(decryptString));
                     break;
                 }
 
             }
-        } catch (IOException ex){
-            System.out.println("Ошибка работы с файлом :" + ex.getMessage());
+        } catch (FileProcessingException ex){
+            System.err.println(ex.getMessage());
         }
 
     }
