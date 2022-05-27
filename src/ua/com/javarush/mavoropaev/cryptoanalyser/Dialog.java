@@ -13,6 +13,9 @@ public class Dialog {
     private static final int STATISTIC_MODULE  = 4;
     private static final int EXIT              = 0;
 
+    private static final boolean FLAG_ENCRYPT = true;
+    private static final boolean FLAG_DECRYPT = false;
+
     private static Set<Integer> setMenu;
 
     public Dialog(){
@@ -20,31 +23,31 @@ public class Dialog {
     }
 
     public void startDialog(){
-        new Encryption();
         initialSetMenu();
+        Encryption caesarCipher = new Encryption();
 
         int numberMenu = EXIT - 1;
         while (numberMenu != EXIT) {
-            numberMenu = choiceMenu();
+            numberMenu = choiceMainMenu();
 
             switch (numberMenu) {
                 case ENCRYPT_MODULE:
-                    Encryption.encryptModule(true);
+                    caesarCipher.encryptModule(FLAG_ENCRYPT);
                     break;
                 case DECRYPT_MODULE:
-                    Encryption.encryptModule(false);
+                    caesarCipher.encryptModule(FLAG_DECRYPT);
                     break;
                 case BRUTEFORCE_MODULE:
-                    Encryption.bruteForceModule();
+                    caesarCipher.bruteForceModule();
                     break;
                 case STATISTIC_MODULE:
-                    Encryption.statisticModule();
+                    caesarCipher.statisticModule();
                     break;
             }
         }
     }
 
-    public static int choiceMenu(){
+    public static int choiceMainMenu(){
         System.out.println("Работает программа криптоанализатор.");
 
         while (true) {
@@ -52,7 +55,7 @@ public class Dialog {
             System.out.println(" - шифрование текста  - " + ENCRYPT_MODULE);
             System.out.println(" - расшифровка текста ключом - " + DECRYPT_MODULE);
             System.out.println(" - расшифровка текста методом brute force - " + BRUTEFORCE_MODULE);
-            System.out.println(" - расшифровка теас4та методом статистического анализа - " + STATISTIC_MODULE);
+            System.out.println(" - расшифровка текста методом статистического анализа - " + STATISTIC_MODULE);
             System.out.println(" - выход - " + EXIT);
             System.out.print("> ");
 

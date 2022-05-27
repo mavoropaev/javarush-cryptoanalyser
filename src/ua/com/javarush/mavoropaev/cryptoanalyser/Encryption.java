@@ -4,14 +4,13 @@ import ua.com.javarush.mavoropaev.cryptoanalyser.exception.ExitFunctionException
 import ua.com.javarush.mavoropaev.cryptoanalyser.exception.FileProcessingException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
-import java.util.InputMismatchException;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Encryption {
     private static final char[] ALPHABET = {'а', 'б', 'в', 'г', 'д', 'е', 'ё', 'ж', 'з',
@@ -24,7 +23,7 @@ public class Encryption {
         initialEncryptMap();
     }
 
-    public static void encryptModule(boolean flagEncrypt) {
+    public void encryptModule(boolean flagEncrypt) {
         if (flagEncrypt) {
             System.out.println("Модуль шифрования данных.");
         }
@@ -102,7 +101,7 @@ public class Encryption {
         }
     }
 
-    public static void bruteForceModule(){
+    public void bruteForceModule(){
         FrequencyDictionary frequencyDictionary = new FrequencyDictionary();
 
         System.out.println("Модуль дешифрования данных методом Brute force.");
@@ -161,8 +160,172 @@ public class Encryption {
 
     }
 
-    public static void statisticModule(){
+    public void statisticModule(){
+        FrequencyDictionary frequencyDictionary = new FrequencyDictionary();
 
+        System.out.println("Модуль дешифрования данных статистическим методом.");
+
+        Path pathFileInput;
+        Path pathFileInputForTextAnalysis;
+        Path pathFileOutput;
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+            String message = "Введите имя и путь зашифрованного файла.";
+            pathFileInput = getNameInputFile(scanner, message);
+        } catch (ExitFunctionException ex) {
+            return;
+        }
+
+        try {
+            String message = "Введите имя и путь для дешифрованного файла.";
+            pathFileOutput = getNameOutputFile(scanner, message);
+        } catch (ExitFunctionException ex) {
+            return;
+        }
+        try {
+            String message = "Введите имя и путь файла для статистического анализа.";
+            pathFileInputForTextAnalysis = getNameInputFile(scanner, message);
+        } catch (ExitFunctionException ex) {
+            return;
+        }
+
+        Map<Character, Integer> countSymbolTextAnalis = new HashMap<>();
+        NavigableMap<Double, Character>  statisticSymbolTextAnalis = new TreeMap<>();
+
+        int countSymbolAllTextAnalis = 0;
+        try {
+
+            for (String line : getInputStrings(pathFileInputForTextAnalysis)) {
+                for (char symbol : line.toCharArray()) {
+                    if (countSymbolTextAnalis.containsKey(symbol)){
+                        int count = countSymbolTextAnalis.get(symbol);
+                        countSymbolTextAnalis.replace(symbol, count+1);
+                    }
+                    else{
+                        countSymbolTextAnalis.put(symbol, 1);
+                    }
+                    countSymbolAllTextAnalis++;
+                }
+            }
+        } catch (FileProcessingException ex){
+            System.err.println(ex.getMessage());
+        }
+        for(char symbol : countSymbolTextAnalis.keySet()){
+            int count = countSymbolTextAnalis.get(symbol);
+            double frequency = round((double)count/countSymbolAllTextAnalis, 5);
+            while (true) {
+                if (statisticSymbolTextAnalis.containsKey(frequency)) {
+                    frequency = frequency + 0.00001;
+                }
+                else{
+                    break;
+                }
+            }
+            statisticSymbolTextAnalis.put(frequency, symbol);
+        }
+
+        Map<Character, Integer> countSymbolEncryptText = new HashMap<>();
+        //Map<Character, Double>  statisticSymbolEncryptText = new HashMap<>();
+        NavigableMap<Double, Character>  statisticSymbolEncryptText = new TreeMap<>();
+
+        int countSymbolAllEncryptText = 0;
+        try {
+
+            for (String line : getInputStrings(pathFileInput)) {
+                for (char symbol : line.toCharArray()) {
+                    if (countSymbolEncryptText.containsKey(symbol)){
+                        int count = countSymbolEncryptText.get(symbol);
+                        countSymbolEncryptText.replace(symbol, count+1);
+                    }
+                    else{
+                        countSymbolEncryptText.put(symbol, 1);
+                    }
+                    countSymbolAllEncryptText++;
+                }
+            }
+        } catch (FileProcessingException ex){
+            System.err.println(ex.getMessage());
+        }
+        for(char symbol : countSymbolEncryptText.keySet()){
+            int count = countSymbolEncryptText.get(symbol);
+
+            double frequency = round((double)count/countSymbolAllEncryptText, 5);
+            while (true) {
+                if (statisticSymbolEncryptText.containsKey(frequency)) {
+                    frequency = frequency + 0.00001;
+                }
+                else{
+                    break;
+                }
+            }
+
+            statisticSymbolEncryptText.put(frequency, symbol);
+        }
+        statisticSymbolTextAnalis = statisticSymbolTextAnalis.descendingMap();
+        statisticSymbolEncryptText = statisticSymbolEncryptText.descendingMap();
+
+        System.out.println(statisticSymbolTextAnalis);
+        System.out.println(statisticSymbolEncryptText);
+
+        //Map< String, String > treeMap = new TreeMap< String, String >(Collections.reverseOrder());
+        for(Map.Entry< Double, Character > entry : statisticSymbolTextAnalis.entrySet()) {
+            Double key = entry.getKey();
+            Character value = entry.getValue();
+            System.out.println(key + " => " + value);
+
+            Double key2 = statisticSymbolEncryptText.ceilingKey(key);
+            Character value2 = statisticSymbolEncryptText.get(key2);
+
+            int keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(value2);
+            if (decryptMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)){
+                break;
+            }
+
+            Double key3 = statisticSymbolEncryptText.floorKey(key);
+            Character value3 = statisticSymbolEncryptText.get(key3);
+
+            keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(value3);
+            if (decryptMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)){
+                break;
+            }
+        }
+
+    }
+
+    private boolean decryptMetod(int keyDecrypt, FrequencyDictionary frequencyDictionary, Path pathFileInput, Path pathFileOutput) {
+        try {
+            List<String> listAllLines = getInputStrings(pathFileInput);
+            StringBuilder decryptString = new StringBuilder();
+
+            //nt keyDecrypt = -numSymbol;
+            for (String line : listAllLines) {
+                for (char symbol : line.toCharArray()) {
+                    decryptString.append(getEncryptSymbol(keyDecrypt, symbol));
+                }
+                decryptString.append('\n');
+            }
+
+            String[] arrayWord = decryptString.toString().split(" ");
+            int numberOfCoincidences = 0;
+            for (int numWord = 0; numWord < arrayWord.length; numWord++){
+                if (frequencyDictionary.dictionary.contains(arrayWord[numWord])){
+                    numberOfCoincidences += 1;
+                }
+            }
+
+            if (numberOfCoincidences < 5) {
+                decryptString.delete(0, decryptString.length());
+            }
+            else{
+                writeStrings(pathFileOutput, String.valueOf(decryptString));
+                return true;
+            }
+
+        } catch (FileProcessingException ex){
+            System.err.println(ex.getMessage());
+        }
+        return false;
     }
 
     public static Path getNameInputFile(Scanner scanner, String message) throws ExitFunctionException {
@@ -267,6 +430,14 @@ public class Encryption {
         catch (NumberFormatException ex){
             return  false;
         }
+    }
+
+    private static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(Double.toString(value));
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
 }
