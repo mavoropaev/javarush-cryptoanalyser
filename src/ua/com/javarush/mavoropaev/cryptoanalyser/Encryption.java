@@ -129,7 +129,12 @@ public class Encryption {
             StringBuilder decryptString = new StringBuilder();
 
             for (int numSymbol = 1; numSymbol <= ALPHABET.length; numSymbol++) {
+
                 int keyDecrypt = -numSymbol;
+                if (decryptModul(keyDecrypt, frequencyDictionary, pathFileOutput, listAllLines, decryptString)) {
+                    break;
+                }
+                /*
                 for (String line : listAllLines) {
                     for (char symbol : line.toCharArray()) {
                         decryptString.append(getEncryptSymbol(keyDecrypt, symbol));
@@ -152,6 +157,8 @@ public class Encryption {
                     writeStrings(pathFileOutput, String.valueOf(decryptString));
                     break;
                 }
+
+                 */
 
             }
         } catch (FileProcessingException ex){
@@ -191,7 +198,7 @@ public class Encryption {
         }
 
         Map<Character, Integer> countSymbolTextAnalis = new HashMap<>();
-        NavigableMap<Double, Character>  statisticSymbolTextAnalis = new TreeMap<>();
+        NavigableMap<Double, Character>  statisticSymbolTextAnalisTreeMap = new TreeMap<>();
 
         int countSymbolAllTextAnalis = 0;
         try {
@@ -215,14 +222,14 @@ public class Encryption {
             int count = countSymbolTextAnalis.get(symbol);
             double frequency = round((double)count/countSymbolAllTextAnalis, 5);
             while (true) {
-                if (statisticSymbolTextAnalis.containsKey(frequency)) {
+                if (statisticSymbolTextAnalisTreeMap.containsKey(frequency)) {
                     frequency = frequency + 0.00001;
                 }
                 else{
                     break;
                 }
             }
-            statisticSymbolTextAnalis.put(frequency, symbol);
+            statisticSymbolTextAnalisTreeMap.put(frequency, symbol);
         }
 
         Map<Character, Integer> countSymbolEncryptText = new HashMap<>();
@@ -262,68 +269,74 @@ public class Encryption {
 
             statisticSymbolEncryptText.put(frequency, symbol);
         }
-        statisticSymbolTextAnalis = statisticSymbolTextAnalis.descendingMap();
+        statisticSymbolTextAnalisTreeMap = statisticSymbolTextAnalisTreeMap.descendingMap();
         statisticSymbolEncryptText = statisticSymbolEncryptText.descendingMap();
 
-        System.out.println(statisticSymbolTextAnalis);
-        System.out.println(statisticSymbolEncryptText);
+        //System.out.println(statisticSymbolTextAnalisTreeMap);
+        //System.out.println(statisticSymbolEncryptText);
 
         //Map< String, String > treeMap = new TreeMap< String, String >(Collections.reverseOrder());
-        for(Map.Entry< Double, Character > entry : statisticSymbolTextAnalis.entrySet()) {
+        for(Map.Entry< Double, Character > entry : statisticSymbolTextAnalisTreeMap.entrySet()) {
             Double key = entry.getKey();
             Character value = entry.getValue();
-            System.out.println(key + " => " + value);
+            //System.out.println(key + " => " + value);
 
-            Double key2 = statisticSymbolEncryptText.ceilingKey(key);
-            Character value2 = statisticSymbolEncryptText.get(key2);
+            Double ceilingKey = statisticSymbolEncryptText.ceilingKey(key);
+            Character ceilingKeyValue = statisticSymbolEncryptText.get(ceilingKey);
 
-            int keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(value2);
-            if (decryptMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)){
+            int keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(ceilingKeyValue);
+            if (decryptStatisticMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)){
                 break;
             }
 
-            Double key3 = statisticSymbolEncryptText.floorKey(key);
-            Character value3 = statisticSymbolEncryptText.get(key3);
+            Double floorKey = statisticSymbolEncryptText.floorKey(key);
+            Character floorKeyValue = statisticSymbolEncryptText.get(floorKey);
 
-            keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(value3);
-            if (decryptMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)){
+            keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(floorKeyValue);
+            if (decryptStatisticMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)){
                 break;
             }
         }
 
     }
 
-    private boolean decryptMetod(int keyDecrypt, FrequencyDictionary frequencyDictionary, Path pathFileInput, Path pathFileOutput) {
+    private boolean decryptStatisticMetod(int keyDecrypt, FrequencyDictionary frequencyDictionary, Path pathFileInput, Path pathFileOutput) {
         try {
             List<String> listAllLines = getInputStrings(pathFileInput);
             StringBuilder decryptString = new StringBuilder();
 
-            //nt keyDecrypt = -numSymbol;
-            for (String line : listAllLines) {
-                for (char symbol : line.toCharArray()) {
-                    decryptString.append(getEncryptSymbol(keyDecrypt, symbol));
-                }
-                decryptString.append('\n');
-            }
-
-            String[] arrayWord = decryptString.toString().split(" ");
-            int numberOfCoincidences = 0;
-            for (int numWord = 0; numWord < arrayWord.length; numWord++){
-                if (frequencyDictionary.dictionary.contains(arrayWord[numWord])){
-                    numberOfCoincidences += 1;
-                }
-            }
-
-            if (numberOfCoincidences < 5) {
-                decryptString.delete(0, decryptString.length());
-            }
-            else{
-                writeStrings(pathFileOutput, String.valueOf(decryptString));
+            if (decryptModul(keyDecrypt, frequencyDictionary, pathFileOutput, listAllLines, decryptString)) {
                 return true;
             }
 
         } catch (FileProcessingException ex){
             System.err.println(ex.getMessage());
+        }
+        return false;
+    }
+
+    private boolean decryptModul(int keyDecrypt, FrequencyDictionary frequencyDictionary, Path pathFileOutput, List<String> listAllLines, StringBuilder decryptString) {
+        for (String line : listAllLines) {
+            for (char symbol : line.toCharArray()) {
+                decryptString.append(getEncryptSymbol(keyDecrypt, symbol));
+            }
+            decryptString.append('\n');
+        }
+
+        String[] arrayWord = decryptString.toString().split(" ");
+        int numberOfCoincidences = 0;
+        for (int numWord = 0; numWord < arrayWord.length; numWord++){
+            if (frequencyDictionary.dictionary.contains(arrayWord[numWord])){
+                numberOfCoincidences += 1;
+            }
+        }
+
+        if (numberOfCoincidences < 5) {
+            decryptString.delete(0, decryptString.length());
+        }
+        else{
+            writeStrings(pathFileOutput, String.valueOf(decryptString));
+            return true;
         }
         return false;
     }
