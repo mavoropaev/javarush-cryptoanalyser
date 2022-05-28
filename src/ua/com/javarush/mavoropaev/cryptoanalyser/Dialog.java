@@ -48,10 +48,10 @@ public class Dialog {
     }
 
     public static int choiceMainMenu(){
-        System.out.println("Работает программа криптоанализатор.");
+        System.out.println("----->>>    Работает программа криптоанализатор    <<<-----");
 
         while (true) {
-            System.out.println("Выберите режим работы:");
+            System.out.println("----->>>    Выберите режим работы:    <<<-----");
             System.out.println(" - шифрование текста  - " + ENCRYPT_MODULE);
             System.out.println(" - расшифровка текста ключом - " + DECRYPT_MODULE);
             System.out.println(" - расшифровка текста методом brute force - " + BRUTEFORCE_MODULE);
