@@ -134,6 +134,7 @@ public class Encryption {
                 if (decryptModul(keyDecrypt, frequencyDictionary, pathFileOutput, listAllLines, decryptString)) {
                     break;
                 }
+
                 /*
                 for (String line : listAllLines) {
                     for (char symbol : line.toCharArray()) {
