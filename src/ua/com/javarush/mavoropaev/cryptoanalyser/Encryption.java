@@ -15,7 +15,7 @@ import java.util.*;
 public class Encryption {
     private static final char[] ALPHABET = {'а', 'б', 'в', 'г', 'д', 'е', 'ё', 'ж', 'з',
             'и', 'й', 'к', 'л', 'м', 'н', 'о', 'п', 'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ',
-            'ъ', 'ы', 'ь', 'э','ю', 'я', '.', ',', '«', '»', '"', '\'', ':', '!', '?'};
+            'ъ', 'ы', 'ь', 'э','ю', 'я', '.', ',', '«', '»', '"', '\'', ':', '!', '?', ' '};
     private static final HashMap<Character, Integer> SYMBOL_TO_NUMBER = new HashMap<>();
     private static final HashMap<Integer, Character> NUMBER_TO_SYMBOL = new HashMap<>();
 
@@ -107,11 +107,11 @@ public class Encryption {
 
         try {
             List<String> listAllLines = getInputStrings(pathFileInput);
-            StringBuilder decryptString = new StringBuilder();
+            //StringBuilder decryptString = new StringBuilder();
 
             for (int numSymbol = 1; numSymbol <= ALPHABET.length; numSymbol++) {
                 int keyDecrypt = -numSymbol;
-                if (decryptDictionaryModul(keyDecrypt, frequencyDictionary, pathFileOutput, listAllLines, decryptString)) {
+                if (decryptDictionaryModul(keyDecrypt, frequencyDictionary, pathFileOutput, listAllLines)) {
                     System.out.println("Найден ключ на " + numSymbol + " итерации.");
                     break;
                 }
@@ -218,7 +218,8 @@ public class Encryption {
         }
     }
 
-    private void statisticAnalisText(Path pathFileInputForTextAnalysis, Map<Character, Integer> countSymbolTextAnalis, NavigableMap<Double, Character> statisticSymbolTextAnalisTreeMap) {
+    private void statisticAnalisText(Path pathFileInputForTextAnalysis, Map<Character, Integer> countSymbolTextAnalis,
+                                     NavigableMap<Double, Character> statisticSymbolTextAnalisTreeMap) {
         int countSymbolAllTextAnalis = 0;
         try {
             for (String line : getInputStrings(pathFileInputForTextAnalysis)) {
@@ -251,12 +252,13 @@ public class Encryption {
         }
     }
 
-    private boolean decryptStatisticMetod(int keyDecrypt, FrequencyDictionary frequencyDictionary, Path pathFileInput, Path pathFileOutput) {
+    private boolean decryptStatisticMetod(int keyDecrypt, FrequencyDictionary frequencyDictionary,
+                                          Path pathFileInput, Path pathFileOutput) {
         try {
             List<String> listAllLines = getInputStrings(pathFileInput);
-            StringBuilder decryptString = new StringBuilder();
+            //StringBuilder decryptString = new StringBuilder();
 
-            if (decryptDictionaryModul(keyDecrypt, frequencyDictionary, pathFileOutput, listAllLines, decryptString)) {
+            if (decryptDictionaryModul(keyDecrypt, frequencyDictionary, pathFileOutput, listAllLines)) {
                 return true;
             }
 
@@ -267,7 +269,8 @@ public class Encryption {
     }
 
     private boolean decryptDictionaryModul(int keyDecrypt, FrequencyDictionary frequencyDictionary,
-                                           Path pathFileOutput, List<String> listAllLines, StringBuilder decryptString) {
+                                           Path pathFileOutput, List<String> listAllLines) {
+        StringBuilder decryptString = new StringBuilder();
         for (String line : listAllLines) {
             for (char symbol : line.toCharArray()) {
                 decryptString.append(getEncryptSymbol(keyDecrypt, symbol));
@@ -310,22 +313,22 @@ public class Encryption {
 
             try{
                 Path pathFileInput = Path.of(strFileInput);
+                if (strFileInput == ""){
+                    continue;
+                }
                 if (Files.exists(pathFileInput)){
                     return pathFileInput;
                 }
                 System.out.println("Файл не существует! Повторите ввод.");
-                System.out.print("> ");
             }
             catch (InvalidPathException ex){
                 System.err.println("Путь недействителен:" + strFileInput);
                 System.err.println("Ошибка:" + ex.getMessage());
-                System.out.println("Повторите ввод.");
-                System.out.print("> ");
             }
         }
     }
 
-    public static Path getNameOutputFile(Scanner scanner, String message) throws ExitFunctionException {
+    public static Path getNameOutputFile(Scanner scanner, String message) {
         while (true) {
             System.out.println(message + " Введите " + Dialog.getEXIT() + " для выхода:");
             System.out.print("> ");
@@ -336,6 +339,9 @@ public class Encryption {
             }
 
             try{
+                if (strFileOutput == ""){
+                    continue;
+                }
                 Path pathFileOutput = Path.of(strFileOutput);
 
                 Files.deleteIfExists(pathFileOutput);
@@ -345,21 +351,17 @@ public class Encryption {
             catch (IOException ex){
                 System.err.println("Ошибка создания файла " + strFileOutput);
                 System.err.println("Ошибка:" + ex.getMessage());
-                System.out.println("Повторите ввод.");
-                System.out.print("> ");
             }
             catch (InvalidPathException ex){
                 System.err.println("Путь недействителен:" + strFileOutput);
                 System.err.println("Ошибка:" + ex.getMessage());
-                System.out.println("Повторите ввод.");
-                System.out.print("> ");
             }
         }
     }
 
     public static int getKeyEncrypt(Scanner scanner){
         while (true) {
-            System.out.println("Введите ключ (число от 0 до "+ (ALPHABET.length - 1) + ") :");
+            System.out.println("Введите ключ (число от 0 до "+ (ALPHABET.length) + ") :");
             System.out.print("> ");
             try {
                 int keyEncrypt = scanner.nextInt();
