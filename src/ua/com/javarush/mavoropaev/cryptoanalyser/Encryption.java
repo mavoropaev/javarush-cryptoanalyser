@@ -15,7 +15,7 @@ import java.util.*;
 public class Encryption {
     private static final char[] ALPHABET = {'а', 'б', 'в', 'г', 'д', 'е', 'ё', 'ж', 'з',
             'и', 'й', 'к', 'л', 'м', 'н', 'о', 'п', 'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ',
-            'ъ', 'ы', 'ь', 'э','ю', 'я', '.', ',', '«', '»', '"', '\'', ':', '!', '?', ' '};
+            'ъ', 'ы', 'ь', 'э','ю', 'я', '.', ',', '«', '»', '"', '\'', ':', '!', '?'};
     private static final HashMap<Character, Integer> SYMBOL_TO_NUMBER = new HashMap<>();
     private static final HashMap<Integer, Character> NUMBER_TO_SYMBOL = new HashMap<>();
 
@@ -158,14 +158,14 @@ public class Encryption {
 
         statisticSymbolTextAnalisTreeMap = statisticSymbolTextAnalisTreeMap.descendingMap();
 
-        /*
+        System.out.println("Текст для анализа");
         for(Map.Entry< Double, Character > entry : statisticSymbolTextAnalisTreeMap.entrySet()) {
             Double key = entry.getKey();
             Character value = entry.getValue();
             System.out.println(value + "->" + key);
         }
 
-         */
+
 
         Map<Character, Integer> countSymbolEncryptText = new HashMap<>();
         NavigableMap<Double, Character>  statisticSymbolEncryptText = new TreeMap<>();
@@ -173,32 +173,49 @@ public class Encryption {
         statisticAnalisText(pathFileInput, countSymbolEncryptText, statisticSymbolEncryptText);
 
         statisticSymbolEncryptText = statisticSymbolEncryptText.descendingMap();
+        System.out.println("Зашифрованный текст");
+        for(Map.Entry< Double, Character > entry : statisticSymbolEncryptText.entrySet()) {
+            Double key = entry.getKey();
+            Character value = entry.getValue();
+            System.out.println(value + "->" + key);
+        }
 
         //Map< String, String > treeMap = new TreeMap< String, String >(Collections.reverseOrder());
         int iteration = 0;
+        int keyDecrypt = 0;
         for(Map.Entry< Double, Character > entry : statisticSymbolTextAnalisTreeMap.entrySet()) {
             iteration++;
             Double key = entry.getKey();
             Character value = entry.getValue();
+            if (!SYMBOL_TO_NUMBER.containsKey(value)){
+                continue;
+            }
+            System.out.println("key: " + key + "->" + "value: " + value);
 
             Double ceilingKey = statisticSymbolEncryptText.ceilingKey(key);
             Character ceilingKeyValue = statisticSymbolEncryptText.get(ceilingKey);
+            if (ceilingKeyValue != null && SYMBOL_TO_NUMBER.containsKey(ceilingKeyValue)) {
+                System.out.println("ceilingKey: " + ceilingKey + "->" + "ceilingKeyValue: " + ceilingKeyValue);
 
-            int keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(ceilingKeyValue);
-            if (decryptStatisticMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)){
-                System.out.println("Подобран ключ на " + iteration + " итерации.");
-                System.out.println("Совпадение по символу '" + value + "'.");
-                break;
+                keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(ceilingKeyValue);
+                if (decryptStatisticMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)) {
+                    System.out.println("Подобран ключ на " + iteration + " итерации.");
+                    System.out.println("Совпадение по символу '" + value + "'.");
+                    break;
+                }
             }
 
             Double floorKey = statisticSymbolEncryptText.floorKey(key);
             Character floorKeyValue = statisticSymbolEncryptText.get(floorKey);
+            if (floorKeyValue != null && SYMBOL_TO_NUMBER.containsKey(floorKeyValue)) {
+                System.out.println("floorKey: " + floorKey + "->" + "floorKeyValue: " + floorKeyValue);
 
-            keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(floorKeyValue);
-            if (decryptStatisticMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)){
-                System.out.println("Подобран ключ на " + iteration + " итерации.");
-                System.out.println("Совпадение по символу " + value + ".");
-                break;
+                keyDecrypt = SYMBOL_TO_NUMBER.get(value) - SYMBOL_TO_NUMBER.get(floorKeyValue);
+                if (decryptStatisticMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)) {
+                    System.out.println("Подобран ключ на " + iteration + " итерации.");
+                    System.out.println("Совпадение по символу " + value + ".");
+                    break;
+                }
             }
         }
     }
@@ -262,13 +279,18 @@ public class Encryption {
 
         String[] arrayWord = decryptString.toString().split(" ");
         int numberOfCoincidences = 0;
+        Set<String> foundWords = new HashSet<>();
         for (int numWord = 0; numWord < arrayWord.length; numWord++){
             if (frequencyDictionary.dictionary.contains(arrayWord[numWord])){
-                numberOfCoincidences += 1;
+                if (!foundWords.contains(arrayWord[numWord])) {
+                    foundWords.add(arrayWord[numWord]);
+                    numberOfCoincidences += 1;
+                    System.out.println(arrayWord[numWord]);
+                }
             }
         }
 
-        if (numberOfCoincidences < 5) {
+        if (numberOfCoincidences < 7) {
             decryptString.delete(0, decryptString.length());
         }
         else{
