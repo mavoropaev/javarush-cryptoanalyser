@@ -18,6 +18,10 @@ public class Encryption {
             'ъ', 'ы', 'ь', 'э','ю', 'я', '.', ',', '«', '»', '"', '\'', ':', '!', '?', ' '};
     private static final HashMap<Character, Integer> SYMBOL_TO_NUMBER = new HashMap<>();
     private static final HashMap<Integer, Character> NUMBER_TO_SYMBOL = new HashMap<>();
+    private static boolean statusOk;
+    private static final boolean ENCRYPT_KEY_FOUND = true;
+    private static final boolean ENCRYPT_KEY_NOT_FOUND = false;
+
 
     public Encryption(){
         initialEncryptMap();
@@ -186,6 +190,7 @@ public class Encryption {
         //Map< String, String > treeMap = new TreeMap< String, String >(Collections.reverseOrder());
         int iteration = 0;
         int keyDecrypt = 0;
+        statusOk = ENCRYPT_KEY_NOT_FOUND;
         for(Map.Entry< Double, Character > entry : statisticSymbolTextAnalisTreeMap.entrySet()) {
             iteration++;
             Double key = entry.getKey();
@@ -201,6 +206,7 @@ public class Encryption {
                 if (decryptStatisticMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)) {
                     System.out.println("Подобран ключ на " + iteration + " итерации.");
                     System.out.println("Совпадение частоты по символу '" + value + "'.");
+                    statusOk = ENCRYPT_KEY_FOUND;
                     break;
                 }
             }
@@ -212,9 +218,14 @@ public class Encryption {
                 if (decryptStatisticMetod(keyDecrypt, frequencyDictionary, pathFileInput, pathFileOutput)) {
                     System.out.println("Подобран ключ на " + iteration + " итерации.");
                     System.out.println("Совпадение частоты по символу " + value + ".");
+                    statusOk = ENCRYPT_KEY_FOUND;
                     break;
                 }
             }
+        }
+        if (statusOk == ENCRYPT_KEY_NOT_FOUND){
+            System.out.println("Попытка найти ключ не удалась.");
+            System.out.println("Используйте другие данные для статистического анализа.");
         }
     }
 
